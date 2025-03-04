@@ -205,30 +205,29 @@ class Tracker:
             obj.update_coordinate_transformation(coord_transformations)
 
         # Update initialized tracked objects with detections
+        # + Update not yet initialized tracked objects with yet unmatched detections
         (
             unmatched_detections,
-            _,
-            unmatched_init_trackers,
+            matched_trackers,
+            unmatched_trackers,
         ) = self._update_objects_in_place(
             self.distance_function,
             self.distance_threshold,
-            [o for o in alive_objects if not o.is_initializing],
+            alive_objects,
             detections,
             period,
         )
 
-        # Update not yet initialized tracked objects with yet unmatched detections
-        (
-            unmatched_detections,
-            matched_not_init_trackers,
-            _,
-        ) = self._update_objects_in_place(
-            self.distance_function,
-            self.distance_threshold,
-            [o for o in alive_objects if o.is_initializing],
-            unmatched_detections,
-            period,
-        )
+        unmatched_init_trackers = [
+            obj
+            for obj in unmatched_trackers
+            if not obj.is_initializing
+        ]
+        matched_not_init_trackers = [
+            obj
+            for obj in matched_trackers
+            if obj.is_initializing
+        ]
 
         if self.reid_distance_function is not None:
             # Match unmatched initialized tracked objects with not yet initialized tracked objects
